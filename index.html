@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Julia Hair Influencer Dashboard </title>
+  <!-- Tailwind for quick, beautiful utilities + Inter -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <!-- GSAP for smooth animations + Chart.js for charts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg-1:#fff7fb; --bg-2:#f0f9ff; --muted:#6b7280;
+    }
+    html,body{height:100%}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system; background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); color:#0f172a; -webkit-font-smoothing:antialiased;}
+    /* polished card + glass */
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.98)); border-radius:16px; box-shadow:0 10px 30px rgba(16,24,40,0.06); border:1px solid rgba(16,24,40,0.04)}
+
+    /* animated nav */
+    .nav-item{position:relative}
+    .nav-item .active-indicator{position:absolute;left:0;bottom:-8px;height:4px;border-radius:999px;width:0;background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+
+    /* page transitions */
+    .page{display:none;opacity:0;transform:translateY(12px);transition:all .38s cubic-bezier(.2,.9,.3,1)}
+    .page.active{display:block;opacity:1;transform:none}
+
+    /* animated buttons */
+    .accent{background:linear-gradient(90deg,#7c3aed,#06b6d4); color:white}
+
+    /* animated badges */
+    .badge{padding:.35rem .6rem;border-radius:999px;background:linear-gradient(90deg,#fff7ed,#fff1f2);font-weight:600}
+
+    /* responsive containers */
+    .max-w-xxl{max-width:1200px}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .tiny{font-size:.82rem;color:var(--muted)}
+
+    /* ripple fallback */
+    .ripple{position:relative;overflow:hidden}
+    .ripple span{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,0.6);animation:ripple .6s linear}
+    @keyframes ripple{to{transform:scale(12);opacity:0}}
+
+    /* animated gradient outline */
+    .gradient-outline{position:relative}
+    .gradient-outline::before{content:'';position:absolute;inset:-2px;background:linear-gradient(90deg,#7c3aed,#06b6d4,#f97316);border-radius:12px;filter:blur(12px);opacity:.8;z-index:-1}
+
+    /* floating fab */
+    .fab{position:fixed;right:28px;bottom:28px;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-weight:800;box-shadow:0 18px 40px rgba(16,24,40,0.12);z-index:80}
+
+    /* responsive tweaks */
+    @media (max-width:900px){ .max-w-xxl{padding:12px} .desktop-only{display:none} }
+  </style>
+</head>
+<body>
+  <!-- confetti canvas -->
+  <canvas id="confetti-canvas" aria-hidden="true" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:90"></canvas>
+
+  <div class="max-w-xxl mx-auto px-5 py-6">
+    <!-- Topbar -->
+    <header class="flex items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <div id="brandLogo" class="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold" style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">SG</div>
+        <div>
+          <div class="tiny muted">Julia Hair</div>
+          <div class="text-xl font-semibold">Influencer Portal</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="hidden md:block w-80 relative">
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input id="globalSearch" class="pl-10 pr-4 py-2 rounded-xl shadow-sm w-full border" placeholder="Search payouts, shipments, campaigns..." />
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="quickActions" class="px-3 py-2 rounded-lg border ripple">Quick</button>
+          <div class="rounded-full w-11 h-11 flex items-center justify-center bg-white shadow-sm">AV</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page shell: left nav + main -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Left nav -->
+      <nav class="col-span-1 sticky top-6 self-start">
+        <div class="card p-4 mb-4">
+          <div class="flex items-center gap-3">
+            <div id="miniAvatar" class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style="background:linear-gradient(135deg,#fde68a,#fb7185)">@</div>
+            <div>
+              <div id="navName" class="font-semibold">Name</div>
+              <div id="navHandle" class="tiny muted">@handle</div>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <div class="badge">Starter</div>
+            <div class="badge">Referral: NEW10</div>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-4">
+          <ul class="space-y-2">
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="overview">Overview<div class="active-indicator" aria-hidden></div></button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="tracking">Tracking</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="bonuses">Bonuses</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="payouts">Payouts</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="referrals">Referrals</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="tasks">Tasks</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="profile">Profile</button></li>
+            <li class="nav-item"><button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50" data-page="settings">Settings</button></li>
+            <li><button id="signOutBtn" class="mt-2 w-full text-left px-3 py-2 rounded-lg border tiny">Sign out</button></li>
+          </ul>
+        </div>
+
+        <div class="card p-3">
+          <div class="tiny muted">Theme</div>
+          <div class="mt-2 flex gap-2">
+            <button id="themeBright" class="px-3 py-2 rounded-lg border tiny">Bright</button>
+            <button id="themeCool" class="px-3 py-2 rounded-lg border tiny">Cool</button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main content area -->
+      <main class="col-span-3">
+        <!-- Login page (will be hidden when signed) -->
+        <section id="login" class="page active">
+          <div class="card p-6 mb-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <div class="tiny muted">Welcome back</div>
+                <h1 class="text-2xl font-semibold">Sign in to your creator dashboard</h1>
+                <div class="tiny muted mt-2">As an <code id="univPwdDisp">Wigs</code> <code>@</code> Julia Hair </div>
+              </div>
+              <div class="w-full md:w-96">
+                <div class="flex gap-2">
+                  <input id="loginHandle" class="w-2/3 px-3 py-2 rounded-lg border" placeholder="@yourhandle" />
+                  <input id="loginPass" type="password" class="w-1/3 px-3 py-2 rounded-lg border" placeholder="password" />
+                </div>
+                <div class="mt-3 flex gap-2">
+                  <button id="loginBtn" class="accent px-4 py-2 rounded-lg">Sign in</button>
+                  <button id="autofillBtn" class="px-4 py-2 rounded-lg border">Forgot Passsword</button>
+                  <button id="viewAsGuest" class="px-4 py-2 rounded-lg border">help?</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="card p-4">
+              <div class="font-semibold">About Julia Hair</div>
+              <div class="tiny muted mt-2">Julia Hair is a global beauty brand specializing in premium 100% human hair extensions and wigs. Our mission is to help women feel confident and beautiful by offering natural-looking styles that match every personality, mood, and moment.</div>
+            </div>
+
+            <div class="card p-4">
+              <div class="font-semibold">Crafted for Confidence</div>
+              <div class="tiny muted mt-2">Every Julia Hair product is designed with quality and versatility in mind — from silky straight bundles to voluminous curls — so you can switch up your style effortlessly without compromising on comfort or authenticity.</div>
+            </div>
+
+            <div class="card p-4">
+              <div class="font-semibold">Trusted by Influencers</div>
+              <div class="tiny muted mt-2">With thousands of creators and beauty professionals partnering with Julia Hair, we’ve built a strong community that inspires creativity, celebrates diversity, and empowers women to express their unique beauty every day.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Overview -->
+        <section id="overview" class="page">
+          <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="tiny muted">Welcome back</div>
+                <h2 id="heroTitle" class="text-2xl font-semibold">—</h2>
+                <div class="tiny muted" id="heroHandleShow">@handle</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <button id="downloadReport" class="px-3 py-2 rounded-lg border">Download</button>
+                <button id="newSubmission" class="accent px-3 py-2 rounded-lg">New Submission</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div class="card p-4">
+                <div class="tiny muted">Earnings </div>
+                <div class="text-2xl font-semibold" id="earningsVal">$250</div>
+                <div class="tiny muted">—</div>
+              </div>
+
+              <div class="card p-4">
+                <div class="tiny muted">Clicks </div>
+                <div class="text-2xl font-semibold" id="clicksVal">0</div>
+                <div class="tiny muted">—</div>
+              </div>
+
+              <div class="card p-4">
+                <div class="tiny muted">Conv. Rate</div>
+                <div class="text-2xl font-semibold" id="convVal">0%</div>
+                <div class="tiny muted">—</div>
+              </div>
+            </div>
+
+            <div class="mt-6 card p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="font-semibold">Performance</div>
+                <div class="tiny muted">Revenue & clicks</div>
+              </div>
+              <canvas id="perfChart" style="height:240px"></canvas>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="card p-4"> <div class="font-semibold">Top Products</div><div class="tiny muted mt-2">No product data yet.</div></div>
+            <div class="card p-4"> <div class="font-semibold">Tasks & Quests</div><div class="tiny muted mt-2">No tasks yet.</div></div>
+            <div class="card p-4"> <div class="font-semibold">Notifications</div><div class="tiny muted mt-2" id="notifArea">No notifications.</div></div>
+          </div>
+        </section>
+
+        <!-- Tracking -->
+        <section id="tracking" class="page">
+          <div class="card p-4 mb-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-semibold">Shipment Tracking</h3>
+                <div class="tiny muted">Live tracking for packages sent to you</div>
+              </div>
+              <div class="tiny muted">Showing <span id="trackingCount">0</span> shipments</div>
+            </div>
+          </div>
+
+          <div id="shipList" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- example card -> JS populates -->
+          </div>
+
+          <div class="mt-4 flex items-center gap-3">
+            <input id="shipFilter" class="pl-3 pr-3 py-2 border rounded-xl w-64" placeholder="Filter shipments (id, carrier, status)"/>
+            <button id="clearFilter" class="px-3 py-2 rounded-xl border tiny">Clear</button>
+          </div>
+        </section>
+
+        <!-- Bonuses -->
+        <section id="bonuses" class="page">
+          <div class="card p-4 mb-4 flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold">Bonuses</h3>
+              <div class="tiny muted">Track goals & unlock rewards</div>
+            </div>
+            <div><button id="claimBonus" class="accent px-3 py-2 rounded-lg">Claim Bonus</button></div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="bonusGrid">
+            <!-- bonus cards -> JS populate -->
+          </div>
+        </section>
+
+        <!-- Payouts -->
+        <section id="payouts" class="page">
+          <div class="card p-4 mb-4 flex items-center justify-between">
+            <div><h3 class="font-semibold">Payouts</h3><div class="tiny muted">Payment history & next payout (minimum withdrawal $500)</div></div>
+            <div><button id="addPayment" class="accent px-3 py-2 rounded-lg">Add Payment Method</button></div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 card p-4"> <div class="font-semibold">Payout History</div><div class="tiny muted mt-2">No payouts yet.</div></div>
+            <div class="card p-4"> <div class="font-semibold">Next Payout</div><div class="text-2xl font-semibold mt-2" id="nextPayout">$0</div></div>
+          </div>
+        </section>
+
+        <!-- Referrals -->
+        <section id="referrals" class="page">
+          <div class="card p-4 mb-4 flex items-center justify-between">
+            <div><h3 class="font-semibold">Referrals</h3><div class="tiny muted">Invite creators and earn</div></div>
+            <div class="flex items-center gap-2">
+              <input id="refField" readonly value="Use code NEW10 at checkout" class="pl-3 pr-3 py-2 border rounded-xl tiny" />
+              <button id="copyRef" class="px-3 py-2 rounded-lg border tiny">Copy</button>
+            </div>
+          </div>
+
+          <div class="card p-4"> <div class="font-semibold">Referral Performance</div><div class="tiny muted mt-2">No referrals tracked yet.</div></div>
+        </section>
+
+        <!-- Tasks -->
+        <section id="tasks" class="page">
+          <div class="card p-4 mb-4 flex items-center justify-between">
+            <div><h3 class="font-semibold">Tasks & Content Calendar</h3><div class="tiny muted">Create quick posts or schedule reels</div></div>
+            <div><button id="addTask" class="accent px-3 py-2 rounded-lg">New Task</button></div>
+          </div>
+
+          <div id="taskList" class="grid grid-cols-1 gap-3">
+            <!-- tasks populated by JS -->
+          </div>
+        </section>
+
+        <!-- Profile -->
+        <section id="profile" class="page">
+          <div class="card p-4 mb-4">
+            <div class="flex items-center gap-4">
+              <div id="profileAvatar" class="w-20 h-20 rounded-xl flex items-center justify-center text-white font-bold text-xl" style="background:linear-gradient(135deg,#f472b6,#7c3aed)">@</div>
+              <div>
+                <div id="profileName" class="text-xl font-semibold">—</div>
+                <div class="tiny muted" id="profileHandle">@handle</div>
+                <div class="mt-2 flex gap-2"><button id="editProfile" class="px-3 py-2 rounded-lg border tiny">Edit</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-4">
+            <h4 class="font-semibold">Connected Accounts</h4>
+            <div class="tiny muted mt-2">Link TikTok, Instagram, YouTube </div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="settings" class="page">
+          <div class="card p-4">
+            <h3 class="font-semibold">Settings</h3>
+            <div class="tiny muted mt-2">Theme, notifications, account settings</div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="card p-3">
+                <div class="tiny muted">Notification Preferences</div>
+                <div class="mt-2"><label><input type="checkbox" id="notifEmail" checked/> Email alerts</label></div>
+                <div class="mt-1"><label><input type="checkbox" id="notifSms"/> SMS alerts</label></div>
+              </div>
+
+              <div class="card p-3">
+                <div class="tiny muted">Danger Zone</div>
+                <div class="mt-2"><button id="deleteAccount" class="px-3 py-2 rounded-lg border tiny">Delete account</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Floating action -->
+  <div id="fab" class="fab gradient-outline accent text-white">+</div>
+
+  <script>
+    /* ---------- Config & initial data ---------- */
+    const UNIVERSAL_PASSWORD = 'influencer'; // change as you like
+    document.getElementById('univPwdDisp').textContent = UNIVERSAL_PASSWORD;
+
+    // sample seed data (to make site look production-ready)
+    const SAMPLE = {
+      handle: '@monalanez',
+      name: 'Simone Decker',
+      earnings: 250,
+      clicks: 0,
+      conv: '0%',
+      customers: 0,
+      shipments: [
+        {id:'SHIP-02102', carrier:'FedEx', status:'In Transit', eta:'Pending'},
+
+      ],
+      bonuses: [
+        {id:1,title:'Launch Push',target:100,progress:0,due:'Sep 30, 2025',reward:500},
+        {id:2,title:'Reels Sprint',target:6,progress:0,due:'Sep 30, 2025',reward:200},
+        {id:3,title:'Referral Boost',target:5,progress:0,due:'Oct 15, 2025',reward:300},
+      ],
+      payouts: [],
+    };
+
+    /* ---------- Routing / Page management ---------- */
+    const pages = document.querySelectorAll('.page');
+    const navButtons = document.querySelectorAll('[data-page]');
+    function showPage(name){
+      pages.forEach(p=>{ if (p.id===name){ p.classList.add('active'); gsap.fromTo('#'+name, {y:8,opacity:0}, {y:0,opacity:1,duration:.36}); } else { p.classList.remove('active'); } });
+      // set active indicator visual
+      navButtons.forEach(b=> b.classList.toggle('font-semibold', b.dataset.page===name));
+    }
+    navButtons.forEach(b=> b.addEventListener('click', ()=>{ showPage(b.dataset.page); }));
+
+    // start on login or stored session
+    const session = JSON.parse(localStorage.getItem('influencer_session')||'null');
+    if (session && session.handle){ enterDashboard(session); } else { showPage('login'); }
+
+    /* ---------- Login logic (username must start with @) ---------- */
+    const loginBtn = document.getElementById('loginBtn');
+    const loginHandle = document.getElementById('loginHandle');
+    const loginPass = document.getElementById('loginPass');
+    const autofillBtn = document.getElementById('autofillBtn');
+    const viewAsGuest = document.getElementById('viewAsGuest');
+
+    function startsWithAt(s){ return typeof s==='string' && s.trim().startsWith('@'); }
+    function toast(msg, ms=2400){ const t=document.createElement('div'); t.textContent=msg; t.style.position='fixed'; t.style.right='20px'; t.style.bottom='20px'; t.style.padding='10px 14px'; t.style.background='linear-gradient(90deg,#111827,#0f172a)'; t.style.color='white'; t.style.borderRadius='10px'; t.style.zIndex=120; document.body.appendChild(t); setTimeout(()=>t.remove(), ms); }
+
+    autofillBtn.addEventListener('click', ()=>{ loginHandle.value = SAMPLE.handle; loginPass.value = UNIVERSAL_PASSWORD; toast('Autofilled credentials'); });
+    viewAsGuest.addEventListener('click', ()=>{ enterDashboard({handle:'@guest', name:'Guest Viewer'}); });
+
+    loginBtn.addEventListener('click', ()=>{
+      let u = loginHandle.value.trim(); const p = loginPass.value;
+      if (!u){ toast('Enter a username starting with @'); loginHandle.focus(); return }
+      if (!startsWithAt(u)){ toast('Adding missing @ to username'); u = '@'+u.replace(/^@+/,''); loginHandle.value = u; }
+      if (p !== UNIVERSAL_PASSWORD){ toast('Incorrect password'); loginPass.focus(); return }
+      // success
+      enterDashboard({handle:u, name:u.replace(/^@/,'')});
+      localStorage.setItem('influencer_session', JSON.stringify({handle:u, name:u.replace(/^@/,'')}));
+    });
+
+    /* ---------- Enter dashboard: populate UI with handle */
+    function fillGlobal(handleObj){
+      const handle = handleObj.handle || '@handle';
+      const name = handleObj.name || handle.replace(/^@/,'');
+      document.getElementById('navHandle').textContent = handle;
+      document.getElementById('navName').textContent = name;
+      document.getElementById('miniAvatar').textContent = handle.slice(0,3).toUpperCase();
+      document.getElementById('brandLogo').textContent = handle.replace(/^@/,'').slice(0,2).toUpperCase();
+      document.getElementById('heroTitle').textContent = name;
+      document.getElementById('heroHandleShow').textContent = handle;
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profileHandle').textContent = handle;
+      document.getElementById('profileAvatar').textContent = handle.slice(0,2).toUpperCase();
+      document.querySelectorAll('.platform-handle')?.forEach(n=> n.textContent = handle);
+      document.getElementById('earningsVal').textContent = '$' + SAMPLE.earnings;
+      document.getElementById('clicksVal').textContent = SAMPLE.clicks;
+      document.getElementById('convVal').textContent = SAMPLE.conv;
+      document.getElementById('nextPayout').textContent = '$' + (SAMPLE.payouts[0]?.amount || 0);
+    }
+
+    function enterDashboard(sessionObj){ fillGlobal(sessionObj); showPage('overview'); populateShipments(); populateBonuses(); populateTasks(); renderPerfChart(); toast('Welcome ' + (sessionObj.handle || 'creator'));
+    }
+
+    document.getElementById('signOutBtn').addEventListener('click', ()=>{ localStorage.removeItem('influencer_session'); location.reload(); });
+
+    /* ---------- Shipments: dynamic population & filtering ---------- */
+    const shipList = document.getElementById('shipList');
+    function populateShipments(){ shipList.innerHTML=''; SAMPLE.shipments.forEach(s=>{ const el = document.createElement('article'); el.className='card p-4 hover:shadow-lg'; el.innerHTML = `
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="font-semibold">Julia hair Package</div>
+            <div class="tiny muted">${s.carrier} • ${s.id}</div>
+          </div>
+          <div class="px-3 py-1 rounded-full" style="background:linear-gradient(90deg,#fde68a,#fb7185); color:#9a3412">${s.status}</div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="step-dot w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">1</div><div class="tiny">Label Created</div>
+            <div class="text-slate-300">›</div>
+            <div class="step-dot w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">2</div><div class="tiny">Picked Up</div>
+            <div class="text-slate-300">›</div>
+            <div class="step-dot w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">3</div><div class="tiny">In Transit</div>
+          </div>
+          <div class="flex items-center justify-between mt-2 tiny muted">
+            <div>ETA: <strong>${s.eta}</strong></div>
+            <div class="flex gap-2"><button class="px-2 py-1 rounded-lg border tiny">Refresh</button><button class="px-2 py-1 rounded-lg border tiny">Rates</button></div>
+          </div>
+        </div>`; shipList.appendChild(el); });
+      document.getElementById('trackingCount').textContent = SAMPLE.shipments.length;
+    }
+
+    document.getElementById('clearFilter').addEventListener('click', ()=>{ document.getElementById('shipFilter').value=''; populateShipments(); });
+    document.getElementById('shipFilter').addEventListener('input', ()=>{
+      const q = document.getElementById('shipFilter').value.trim().toLowerCase(); document.querySelectorAll('#shipList article').forEach(a=>{ a.style.display = !q || a.innerText.toLowerCase().includes(q) ? '' : 'none' }); document.getElementById('trackingCount').textContent = Array.from(document.querySelectorAll('#shipList article')).filter(a=> a.style.display !== 'none').length;
+    });
+
+    /* ---------- Bonuses population & interactions ---------- */
+    function populateBonuses(){ const container = document.getElementById('bonusGrid'); container.innerHTML=''; SAMPLE.bonuses.forEach(b=>{ const el = document.createElement('div'); el.className='card p-4'; el.innerHTML = `
+      <div class="flex items-center justify-between mb-3"><div><div class="font-semibold">${b.title}</div><div class="tiny muted">Reach ${b.target} — $${b.reward}</div></div><div class="tiny muted">Due ${b.due}</div></div>
+      <div class="tiny muted mb-2">Progress</div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden mb-2"><div class="h-3 rounded-full" style="width:${Math.round(b.progress/b.target*100)}%; background:linear-gradient(90deg,#60a5fa,#f472b6)"></div></div>
+      <div class="tiny muted">${b.progress} / ${b.target} (${Math.round(b.progress/b.target*100)}%)</div>
+      <div class="mt-3 flex gap-2"><button class="px-3 py-2 rounded-lg border tiny" onclick="navigator.clipboard?.writeText('Share ${b.title}')">Share</button><button class="px-3 py-2 rounded-lg accent text-white" onclick="triggerConfetti()">Preview</button></div>`; container.appendChild(el); }); }
+
+    document.getElementById('claimBonus').addEventListener('click', ()=>{ triggerConfetti(); toast('Claim simulated — no real funds'); });
+
+    /* ---------- Tasks management (demo) ---------- */
+    const taskList = document.getElementById('taskList');
+    function populateTasks(){ taskList.innerHTML=''; const tasks = JSON.parse(localStorage.getItem('demo_tasks')||'[]'); if (!tasks.length) { taskList.innerHTML='<div class="card p-4 tiny muted">No tasks yet — create some with + button.</div>'; return } tasks.forEach((t,i)=>{ const el = document.createElement('div'); el.className='card p-3 flex items-center justify-between'; el.innerHTML = `<div><div class="font-semibold">${t.title}</div><div class="tiny muted">${t.desc}</div></div><div><button class="px-2 py-1 border rounded-lg tiny" onclick="removeTask(${i})">Done</button></div>`; taskList.appendChild(el); }); }
+
+    document.getElementById('addTask').addEventListener('click', ()=>{ const title = prompt('Task title'); if (!title) return; const desc = prompt('Short description')||''; const tasks = JSON.parse(localStorage.getItem('demo_tasks')||'[]'); tasks.push({title,desc}); localStorage.setItem('demo_tasks', JSON.stringify(tasks)); populateTasks(); toast('Task created'); });
+    window.removeTask = function(i){ const tasks = JSON.parse(localStorage.getItem('demo_tasks')||'[]'); tasks.splice(i,1); localStorage.setItem('demo_tasks', JSON.stringify(tasks)); populateTasks(); };
+
+    /* ---------- Perf chart (Chart.js) ---------- */
+    function renderPerfChart(){ const ctx = document.getElementById('perfChart'); if (!ctx) return; const labels = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct']; const data = {labels, datasets:[{label:'Revenue',data:[1,2,4,6,9,13,16,17],fill:true, tension:.3,backgroundColor:'rgba(124,58,237,0.08)',borderColor:'#7c3aed'},{label:'Clicks',data:[2,4,5,7,8,10,11,12],yAxisID:'y1',borderColor:'#06b6d4',fill:false}]}; new Chart(ctx,{type:'line',data,options:{interaction:{mode:'index'},scales:{y:{position:'left'}, y1:{position:'right',grid:{display:false}}}}}); }
+
+    /* ---------- Confetti (lightweight) ---------- */
+    const confettiCanvas = document.getElementById('confetti-canvas'); const confCtx = confettiCanvas.getContext('2d'); let confPieces=[]; function resizeConf(){ confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; } window.addEventListener('resize', resizeConf); resizeConf(); function rand(min,max){ return Math.random()*(max-min)+min; } function createConfetti(x,y,count=40){ const colors=['#f472b6','#7c3aed','#06b6d4','#f59e0b','#34d399','#60a5fa']; for(let i=0;i<count;i++){ confPieces.push({x,y,vx:rand(-6,6),vy:rand(-12,-4),size:rand(6,12),angle:rand(0,6.28),color:colors[Math.floor(rand(0,colors.length))],spin:rand(-0.2,0.2),life:rand(50,120)}); } }
+    function updateConf(){ confCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height); confPieces.forEach((p,idx)=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.45; p.angle+=p.spin; p.life--; confCtx.save(); confCtx.translate(p.x,p.y); confCtx.rotate(p.angle); confCtx.fillStyle=p.color; confCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6); confCtx.restore(); if (p.life<=0 || p.y>confettiCanvas.height+50) confPieces.splice(idx,1); }); if (confPieces.length) requestAnimationFrame(updateConf); }
+    function triggerConfetti(x,y){ createConfetti(x||innerWidth/2,y||innerHeight/3,60); updateConf(); }
+
+    /* ---------- Small interactions & bindings ---------- */
+    document.getElementById('downloadReport').addEventListener('click', ()=> toast('Report exported'));
+    document.getElementById('newSubmission').addEventListener('click', ()=> toast('Submission modal opened'));
+    document.getElementById('quickActions').addEventListener('click', ()=> toast('Quick actions'));
+    document.getElementById('fab').addEventListener('click', ()=>{ const t=prompt('Quick task title'); if (t){ const tasks = JSON.parse(localStorage.getItem('demo_tasks')||'[]'); tasks.push({title:t,desc:'quick task'}); localStorage.setItem('demo_tasks', JSON.stringify(tasks)); populateTasks(); toast('Quick task added'); } });
+
+    document.getElementById('copyRef').addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(document.getElementById('refField').value); toast('Referral copied'); }catch(e){ toast('Copy failed — select & copy manually'); }});
+
+    document.getElementById('addPayment').addEventListener('click', ()=>{ triggerConfetti(); toast('Payment method added'); });
+    document.getElementById('claimBonus').addEventListener('click', ()=>{ triggerConfetti(); toast('Bonus claimed'); });
+
+    // Chart & page warmups
+    function warmUp(){ renderPerfChart(); populateBonuses(); populateTasks(); populateShipments(); }
+    warmUp();
+
+    // small theme switches
+    document.getElementById('themeBright').addEventListener('click', ()=>{ document.body.style.background = 'linear-gradient(180deg,#fff7fb,#f0f9ff)'; toast('Bright theme'); });
+    document.getElementById('themeCool').addEventListener('click', ()=>{ document.body.style.background = 'linear-gradient(180deg,#071025,#0b1220)'; toast('Cool dark theme'); });
+
+    // autoresize charts on tab change
+    const observer = new MutationObserver(()=>{ document.querySelectorAll('canvas').forEach(c=>{ try{ c._chart?.resize?.(); }catch(e){} }); }); observer.observe(document.body,{attributes:true,childList:true,subtree:true});
+
+    // subtle GSAP entrance for nav
+    gsap.from('.nav-item', {y:8,opacity:0,stagger:.04,duration:.45});
+
+    // make site appear polished on load
+    window.addEventListener('load', ()=>{ setTimeout(()=> gsap.to('.card',{opacity:1,duration:.6,stagger:.02}),120); });
+
+    /* ---------- Ensure placeholders for platform handles (if any) ---------- */
+    // if you want social placeholders in more places, search for `.platform-handle` and replace via JS
+
+  </script>
+</body>
+</html>
