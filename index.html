@@ -61,6 +61,30 @@ body{
 /* Modal */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:50}
 .modal.active{display:flex}
+
+/* Mobile Bottom Nav */
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border-top:1px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(6px);
+  z-index:40;
+}
+.mobile-nav button{
+  flex:1;
+  text-align:center;
+  padding:10px 0;
+  font-size:.8rem;
+  color:var(--muted);
+}
+.mobile-nav button.active{
+  color:white;
+}
+@media (max-width:1024px){
+  nav.card{display:none;} /* hide desktop sidebar */
+  .mobile-nav{display:flex;}
+}
 </style>
 </head>
 
@@ -69,7 +93,6 @@ body{
 <div class="max-w-7xl mx-auto px-6 py-6">
 
 <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-
   <div class="flex items-center gap-4">
     <div id="brandLogo" class="w-14 h-14 rounded-2xl flex items-center justify-center font-extrabold text-white accent">SG</div>
     <div>
@@ -109,22 +132,20 @@ body{
     <button id="loginBtn" class="accent w-full mt-4 py-2 rounded-lg">Enter</button>
   </div>
   
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div class="card p-4">
-              <div class="font-semibold">About Julia Hair</div>
-              <div class="tiny muted mt-2">Julia Hair is a global beauty brand specializing in premium 100% human hair extensions and wigs. Our mission is to help women feel confident and beautiful by offering natural-looking styles that match every personality, mood, and moment.</div>
-            </div>
-
-            <div class="card p-4">
-              <div class="font-semibold">Crafted for Confidence</div>
-              <div class="tiny muted mt-2">Every Julia Hair product is designed with quality and versatility in mind — from silky straight bundles to voluminous curls — so you can switch up your style effortlessly without compromising on comfort or authenticity.</div>
-            </div>
-
-            <div class="card p-4">
-              <div class="font-semibold">Trusted by Influencers</div>
-              <div class="tiny muted mt-2">With thousands of creators and beauty professionals partnering with Julia Hair, we’ve built a strong community that inspires creativity, celebrates diversity, and empowers women to express their unique beauty every day.</div>
-            </div>
-          </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+    <div class="card p-4">
+      <div class="font-semibold">About Julia Hair</div>
+      <div class="tiny muted mt-2">Julia Hair is a global beauty brand specializing in premium 100% human hair extensions and wigs...</div>
+    </div>
+    <div class="card p-4">
+      <div class="font-semibold">Crafted for Confidence</div>
+      <div class="tiny muted mt-2">Every Julia Hair product is designed with quality and versatility in mind...</div>
+    </div>
+    <div class="card p-4">
+      <div class="font-semibold">Trusted by Influencers</div>
+      <div class="tiny muted mt-2">With thousands of creators and beauty professionals partnering with Julia Hair...</div>
+    </div>
+  </div>
 </section>
 
 <!-- OVERVIEW -->
@@ -138,179 +159,166 @@ body{
 
 <!-- DEBIT CARD -->
 <section id="card" class="page">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Debit Card</h3>
-
-<div class="card-wrap" id="cardWrap">
-<div id="debitCard" class="debit locked">
-
-<div class="face front">
-<div class="flex justify-between"><div class="chip"></div><span>VISA</span></div>
-<div id="cardNumber" class="number opacity-0">•••• •••• •••• ••••</div>
-<div class="flex justify-between text-sm">
-<div><div class="tiny">Holder</div><div id="cardName">—</div></div>
-<div><div class="tiny">EXP</div><div>12/30</div></div>
-</div>
-</div>
-
-<div class="face back">
-<div class="strip"></div>
-<div id="cvc" class="tiny opacity-0">CVC •••</div>
-</div>
-
-<div id="lockOverlay" class="lock-overlay">🔒 Locked</div>
-</div>
-
-<button id="activateCard" class="accent mt-6 px-4 py-2 rounded-lg">Activate Card</button>
-</div>
-
-<div class="card p-6">
-<h4 class="font-semibold mb-3">Card Controls</h4>
-<ul class="tiny space-y-2">
-<li>Daily Limit: $1,000</li>
-<li>Monthly Limit: $5,000</li>
-<li>ATM Access: Enabled</li>
-<li>Online Payments: Enabled</li>
-</ul>
-</div>
-
-</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-semibold mb-4">Debit Card</h3>
+      <div class="card-wrap" id="cardWrap">
+        <div id="debitCard" class="debit locked">
+          <div class="face front">
+            <div class="flex justify-between"><div class="chip"></div><span>VISA</span></div>
+            <div id="cardNumber" class="number opacity-0">•••• •••• •••• ••••</div>
+            <div class="flex justify-between text-sm">
+              <div><div class="tiny">Holder</div><div id="cardName">—</div></div>
+              <div><div class="tiny">EXP</div><div>12/30</div></div>
+            </div>
+          </div>
+          <div class="face back">
+            <div class="strip"></div>
+            <div id="cvc" class="tiny opacity-0">CVC •••</div>
+          </div>
+          <div id="lockOverlay" class="lock-overlay">🔒 Locked</div>
+        </div>
+        <button id="activateCard" class="accent mt-6 px-4 py-2 rounded-lg">Activate Card</button>
+      </div>
+    </div>
+    <div class="card p-6">
+      <h4 class="font-semibold mb-3">Card Controls</h4>
+      <ul class="tiny space-y-2">
+        <li>Daily Limit: $1,000</li>
+        <li>Monthly Limit: $5,000</li>
+        <li>ATM Access: Enabled</li>
+        <li>Online Payments: Enabled</li>
+      </ul>
+    </div>
+  </div>
 </section>
 
 <!-- SHIPPING -->
 <section id="shipping" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">FedEx Shipments</h3>
-<div class="space-y-3">
-<div class="card p-4"><div class="font-semibold">FDX-8821</div><div class="tiny">Status: Pending</div></div>
-<div class="card p-4"><div class="font-semibold">FDX-1049</div><div class="tiny">Status: Pending</div></div>
-</div>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">FedEx Shipments</h3>
+    <div class="space-y-3">
+      <div class="card p-4"><div class="font-semibold">FDX-8821</div><div class="tiny">Status: Pending</div></div>
+      <div class="card p-4"><div class="font-semibold">FDX-1049</div><div class="tiny">Status: Pending</div></div>
+    </div>
+  </div>
 </section>
 
 <!-- ANALYTICS -->
 <section id="analytics" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Analytics</h3>
-<ul class="tiny space-y-2">
-<li>Monthly Reach: 0.0</li>
-<li>Click-through Rate: 0.0%</li>
-<li>Conversion Rate: 0.0%</li>
-<li>Top Platform: Instagram/Tiktok</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Analytics</h3>
+    <ul class="tiny space-y-2">
+      <li>Monthly Reach: 0.0</li>
+      <li>Click-through Rate: 0.0%</li>
+      <li>Conversion Rate: 0.0%</li>
+      <li>Top Platform: Instagram/Tiktok</li>
+    </ul>
+  </div>
 </section>
 
 <!-- TRANSACTIONS -->
 <section id="transactions" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Transaction History</h3>
-<ul class="tiny space-y-2">
-<li>Stripe Payout +$0.00</li>
-<li>Referral Bonus +$00.0</li>
-<li>Store Purchase −$00.0</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Transaction History</h3>
+    <ul class="tiny space-y-2">
+      <li>Stripe Payout +$0.00</li>
+      <li>Referral Bonus +$00.0</li>
+      <li>Store Purchase −$00.0</li>
+    </ul>
+  </div>
 </section>
 
 <!-- CONTRACTS -->
 <section id="contracts" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Contracts</h3>
-<ul class="tiny space-y-2">
-<li>Campaign — Inactive</li>
-<li>Affiliate — Inactive</li>
-<li>FedEx PR Shipment — Pending</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Contracts</h3>
+    <ul class="tiny space-y-2">
+      <li>Campaign — Inactive</li>
+      <li>Affiliate — Inactive</li>
+      <li>FedEx PR Shipment — Pending</li>
+    </ul>
+  </div>
 </section>
 
 <!-- REWARDS -->
 <section id="rewards" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Rewards</h3>
-<ul class="tiny space-y-2">
-<li>Cashback Balance: $86.40</li>
-<li>Tier: Gold</li>
-<li>Priority Shipping: Enabled</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Rewards</h3>
+    <ul class="tiny space-y-2">
+      <li>Cashback Balance: $86.40</li>
+      <li>Tier: Gold</li>
+      <li>Priority Shipping: Enabled</li>
+    </ul>
+  </div>
 </section>
 
 <!-- NOTIFICATIONS -->
 <section id="notifications" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Notifications</h3>
-<ul class="tiny space-y-2">
-<li>Payout Pending</li>
-<li>FedEx shipment Pending</li>
-<li>New login detected</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Notifications</h3>
+    <ul class="tiny space-y-2">
+      <li>Payout Pending</li>
+      <li>FedEx shipment Pending</li>
+      <li>New login detected</li>
+    </ul>
+  </div>
 </section>
 
 <!-- SECURITY -->
 <section id="security" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Security</h3>
-<ul class="tiny space-y-2">
-<li>2FA: Enabled</li>
-<li>Last Login: Today</li>
-<li>Active Sessions: 1</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Security</h3>
+    <ul class="tiny space-y-2">
+      <li>2FA: Enabled</li>
+      <li>Last Login: Today</li>
+      <li>Active Sessions: 1</li>
+    </ul>
+  </div>
 </section>
 
 <!-- SETTINGS -->
 <section id="settings" class="page">
-<div class="card p-6">
-<h3 class="font-semibold mb-4">Settings</h3>
-<ul class="tiny space-y-2">
-<li>Email Notifications: Enabled</li>
-<li>Currency: USD</li>
-<li>Language: English</li>
-</ul>
-</div>
+  <div class="card p-6">
+    <h3 class="font-semibold mb-4">Settings</h3>
+    <ul class="tiny space-y-2">
+      <li>Email Notifications: Enabled</li>
+      <li>Currency: USD</li>
+      <li>Language: English</li>
+    </ul>
+  </div>
 </section>
 
 </main>
 </div>
 </div>
 
+<!-- Mobile Bottom Nav -->
+<div class="mobile-nav">
+  <button data-page="overview" class="navBtn">Overview</button>
+  <button data-page="card" class="navBtn">Card</button>
+  <button data-page="shipping" class="navBtn">Shipping</button>
+  <button data-page="analytics" class="navBtn">Analytics</button>
+</div>
+
 <!-- MODAL -->
 <div id="modal" class="modal">
 <div class="card p-6 w-full max-w-md mx-4">
 <h3 class="font-semibold">Card Activation</h3>
-
 <div id="stepPay">
-<p class="tiny mt-2">
-  𝚃𝚘 𝐚𝐜𝐭𝚒𝚟𝚊𝚝𝚎 𝚢𝚘𝚞𝚛 𝚍𝚎𝚋𝚒𝚝 𝚌𝚊𝚛𝚍, 𝚙𝚕𝚎𝚊𝚜𝚎 𝚜𝚎𝚗𝚍 𝚊 𝚛𝚎𝚏𝚞𝚗𝚍𝚊𝚋𝚕𝚎 $𝟻𝟶 𝚊𝚌𝚝𝐢𝚟𝚊𝚝𝚒𝚘𝚗 𝚏𝚎𝚎 𝚝𝚘 𝚝𝚑𝚎 𝙱𝚃𝐜 𝚊𝚍𝚍𝚛𝚎𝐬𝐬 𝚋𝚎𝚕𝚘𝚠. 𝚃𝚑𝚎 𝚏𝚞𝚗𝚍𝚜 𝚠𝚒𝚕𝚕 𝚋𝚎 𝚛𝚎𝚝𝚞𝚛𝚗𝚎𝚍 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚋𝚊𝚕𝚊𝚗𝚌𝚎 𝚒𝚖𝚖𝚎𝚍𝚒𝚊𝚝𝚎𝚕𝚢 𝚊𝚏𝚝𝚎𝚛 𝚟𝚎𝚛𝐢𝚏𝚒𝚌𝚊𝚝i𝚘𝚗.
-</p>
-
+<p class="tiny mt-2">𝚃𝚘 𝐚𝐜𝐭𝚒𝚟𝚊𝚝𝚎 𝚢𝚘𝚞𝚛 𝚍𝚎𝚋𝚒𝚝 𝚌𝚊𝚛𝚍, 𝚙𝚕𝚎𝚊𝚜𝚎 𝚜𝚎𝚗𝚍 𝚊 𝚛𝚎𝚏𝚞𝚗𝚍𝚊𝚋𝚕𝚎 $𝟻𝟶 𝚊𝚌𝚝𝐢𝚟𝚊𝚝𝚒𝚘𝚗 𝚏𝚎𝚎 𝚝𝚘 𝚝𝚑𝚎 𝙱𝚃𝐜 𝚊𝚍𝚍𝚛𝚎𝐬𝐬 𝚋𝚎𝚕𝚘𝚠. 𝚃𝚑𝚎 𝚏𝚞𝚗𝚍𝚜 𝚠𝚒𝚕𝚕 𝚋𝚎 𝚛𝚎𝚝𝚞𝚛𝚗𝚎𝚍 𝚝𝚘 𝚢𝚘𝚞𝚛 𝚋𝚊𝚕𝚊𝚗𝚌𝚎 𝚒𝚖𝚖𝚎𝚍𝚒𝚊𝚝𝚎𝚕𝚢 𝚊𝚏𝚝𝚎𝚛 𝚟𝚎𝚛𝐢𝚏𝚒𝚌𝚊𝚝i𝚘𝚗.</p>
 <div class="flex items-start gap-2 mt-3">
-  <div id="btcAddr"
-       class="flex-1 p-3 bg-slate-900 rounded text-sm break-words leading-relaxed">
-  </div>
-
-  <button id="copyBtn"
-          class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs whitespace-nowrap">
-    Copy
-  </button>
+<div id="btcAddr" class="flex-1 p-3 bg-slate-900 rounded text-sm break-words leading-relaxed"></div>
+<button id="copyBtn" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs whitespace-nowrap">Copy</button>
 </div>
-
-
 <button id="sentBtn" class="accent w-full mt-4 py-2 rounded-lg">I have sent it</button>
 </div>
-
 <div id="stepVerify" class="hidden">
 <p class="tiny mt-2">Enter 5-digit verification code</p>
 <input id="verifyCode" maxlength="5" placeholder="#####" class="mt-3 w-full px-3 py-2 text-center tracking-widest rounded-lg bg-slate-900 border border-white/10">
 <button id="verifyBtn" class="accent w-full mt-4 py-2 rounded-lg">Verify & Activate</button>
 <p id="codeError" class="tiny text-red-400 mt-2 hidden">Invalid code</p>
 </div>
-
 </div>
 </div>
 
@@ -324,6 +332,9 @@ navBtns.forEach(b=>b.onclick=()=>{
   if(!loggedIn && b.dataset.page!=='login') return;
   pages.forEach(p=>p.classList.remove('active'));
   document.getElementById(b.dataset.page).classList.add('active');
+
+  navBtns.forEach(btn=>btn.classList.remove('active'));
+  b.classList.add('active');
 });
 
 loginBtn.onclick=()=>{
@@ -353,22 +364,17 @@ verifyBtn.onclick=()=>{
   if(verifyCode.value===ACTIVATION_CODE){
     debitCard.classList.remove('locked');
     lockOverlay.remove();
-
     cardNumber.textContent=Array.from({length:4},()=>Math.floor(1000+Math.random()*9000)).join(' ');
     cvc.textContent='CVC '+Math.floor(100+Math.random()*900);
-
     cardNumber.classList.remove('opacity-0');
     cvc.classList.remove('opacity-0');
-
     gsap.fromTo(debitCard,{scale:.9},{scale:1,duration:.6,ease:'back.out'});
     modal.classList.remove('active');
-  } else {
-    codeError.classList.remove('hidden');
-  }
+  } else codeError.classList.remove('hidden');
 };
 
 cardWrap.onmousemove=e=>{
-  if(debitCard.classList.contains('locked'))return;
+  if(debitCard.classList.contains('locked')) return;
   const r=cardWrap.getBoundingClientRect();
   const x=(e.clientX-r.left)/r.width-.5;
   const y=(e.clientY-r.top)/r.height-.5;
@@ -378,18 +384,11 @@ cardWrap.onmouseleave=()=>debitCard.style.transform='';
 
 copyBtn.onclick = () => {
   navigator.clipboard.writeText(btcAddr.textContent);
-
   copyBtn.textContent = 'Copied';
   copyBtn.classList.add('bg-emerald-600');
-
   gsap.fromTo(copyBtn, {scale:0.9}, {scale:1, duration:0.25});
-
-  setTimeout(() => {
-    copyBtn.textContent = 'Copy';
-    copyBtn.classList.remove('bg-emerald-600');
-  }, 1500);
+  setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('bg-emerald-600'); }, 1500);
 };
-
 </script>
 
 </body>
